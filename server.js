@@ -3,6 +3,7 @@ var fs = require('fs');
 var path = require('path');
 var express = require('express');
 var mongodb = require('mongodb');
+var session = require('express-session');
 var client = new mongodb.MongoClient("mongodb://127.0.0.1:27017"); 
 
 session = require('express-session');
@@ -36,6 +37,20 @@ app.get('/register.html', (req, res) => {
   res.sendFile(path.join(__dirname, "register.html"));
 });
 
+app.get('/add_user_data.html', (req,res) =>{
+  res.sendFile(path.join(__dirname, "add_user_data.html"));
+});
+
+app.post('/add_user_data', async (req,res) =>{
+  user_data = req.body.user_data
+
+  var logged_in = await searchDb({username:req.session.usernameVal})
+  console.log(req.session);
+  console.log()
+  console.log(logged_in);
+  
+  res.sendFile(path.join(__dirname, "add_user_data.html"));
+});
 
 app.post('/register', async (req,res) => {
     var usernameVal = req.body.username;
@@ -62,6 +77,13 @@ app.post("/login", async (req, res) => {
       console.log("Login failed");
       res.redirect('back');
       return;  
+    } else{
+      req.session.username = req.body.username
+      req.session.password = req.body.password
+
+   //   user_data = await searchDb{session_data:}
+
+      console.log("Successful login")
     }
     
     var result = results[0];
