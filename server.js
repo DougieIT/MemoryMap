@@ -4,6 +4,7 @@ var path = require('path');
 var express = require('express');
 var mongodb = require('mongodb');
 var session = require('express-session');
+const { markAsUntransferable } = require('worker_threads');
 var client = new mongodb.MongoClient("mongodb://127.0.0.1:27017"); 
 
 session = require('express-session');
@@ -23,10 +24,31 @@ app.use(session({
 }));
 
 
+app.get('/user_markers', async(req,res)=> {
+
+  /*
+  markers : [
+      {
+        name : "text"
+        long : float
+        lat : float
+        info : "text"
+        
+      }
+    ]
+  */
+
+    var user_data = await searchDb({username : req.session.username});
+    
+    console.log(user_data);
+    markers = user_data[0].markers.list;
+    console.log(markers);
+    res.json(markers);
+});
+
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
-    
-
 });
 
 app.get('/login.html', (req, res) => {
@@ -91,11 +113,10 @@ app.post("/login", async (req, res) => {
       console.log("Sucessful login");
       req.session.isLoggedIn = true;
       req.session.username = enteredUsername;
+      res.sendFile(path.join(__dirname, "map.html"));
     } else{
       console.log("Login failed");
     }
-
-    res.redirect('back');
 });
 
 

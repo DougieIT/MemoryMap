@@ -11,16 +11,118 @@
 <body>
 
 <div id="map"></div>
+<div id="marker_inspected">
+     <li id="marker_name">name : </li>
+     <li id="marker_lng">lng : </li>
+     <li id="marker_lat">lat : </li>
+     <li id="marker_info">info: </li>
+</div>
 
+<div id="marker_insert" style="display:none">
+
+    <label for="marker_name">Marker name:</label>
+    <input type="text" id="marker_name"> 
+    <br></br>
+    <label for="marker_info">Marker info:</label>
+    <input type="text" id="marker_info"> 
+
+    <br></br>
+    <button>Save</button>
+
+</div>
+
+<div id="marker_editor"></div>
 <script>
     // Initialize the map and set its view to a chosen geographical coordinates and a zoom level
+
+/*
+{
+  "name": "Marker 1",
+  "long": 54.111,
+  "lat": -3
+  "description": "Description 1"
+}
+*/
     var map = L.map('map').setView([51.505, -0.09], 13);
+    points = [[55.948774, -3.241603], [55.928774, -3.201603], [55.948774, -3.801603]];
+
+    async function fetchMarkers(){
+        response = await fetch('/user_markers');
+        data = await response.json();
+        return data;
+    }
+
+    fetchMarkers().then((response) => {
+        writeSavedUserMarkers(response);
+    });
+
+    function writeSavedUserMarkers(user_markers){
+        console.log(user_markers);
+        markers = [];
+        for (let i = 0; i < user_markers.length; i++){
+            var marker = L.marker([user_markers[i].lat, user_markers[i].lng]).addTo(map);
+
+            markers.push(marker);
+
+            //adding click event
+            marker.on('click', function(ev){
+                markerDiv = document.getElementById("marker_inspected");
+                markerDiv.style.display = 'block';
+
+                nameElement = document.getElementById("marker_name");
+                nameElement.innerHTML = "name:  " + user_markers[i].name;
+
+                lngElement = document.getElementById("marker_lng");
+                lngElement.innerHTML = "lng:    " + user_markers[i].lng;
+
+                latElement = document.getElementById("marker_lat");
+                latElement.innerHTML = "lat:    " + user_markers[i].lat;
+
+                infoElement = document.getElementById("marker_info");
+                infoElement.innerHTML = "info:  " + user_markers[i].info;
+            });
+        }
+    }
+
+    map.on('dblclick', function(ev){
+        document.getElementById("marker_inspected").style.display = 'none';
+        
+        mouseX = ev.latlng.lat;
+        mouseY = ev.latlng.lng;
+        L.marker([mouseX, mouseY]).addTo(map);
+
+        var saveButton = document.createElement('button');
+        saveButton.id = 'saveId';
+        saveButton.textContent = "Save";
+
+        var nameTextBox = document.createElement('input');
+        var infoTextBox = document.createElement('input');
+        var lineBreak = document.createElement('br');
+
+        var editMarkerContainer = document.getElementById("marker_editor");
+        editMarkerContainer.appendChild(nameTextBox);
+        editMarkerContainer.appendChild(lineBreak);
+        editMarkerContainer.appendChild(infoTextBox);
+        editMarkerContainer.appendChild(lineBreak);
+        editMarkerContainer.appendChild(saveButton);
+
+        saveButton.addEventListener('click', function(){
+            editMarkerContainer.removeChild(saveButton);
+        });
+    });
+
+
+
+
+
+    
 
     // Add an OpenStreetMap tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
+
 </script>
 
 </body>
